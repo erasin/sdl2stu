@@ -63,16 +63,40 @@ func loadMedia() (err error) {
 	return nil
 }
 
+// 加载贴图
 func loadSurface(src string) *sdl.Surface {
-	var loadImg *sdl.Surface
-	loadImg, err := sdl.LoadBMP(src)
+	var loadedSurface, optimizedSurface *sdl.Surface
+
+	loadedSurface, err := sdl.LoadBMP(src)
 
 	if err != nil {
 		fmt.Println("加载bmp资源错误，Error：", err)
 	}
-	// defer loadImg.Free()
+	// 释放旧数据
+	defer loadedSurface.Free()
 
-	return loadImg
+	// 转换
+	optimizedSurface, err = loadedSurface.Convert(gScreenSurface.Format, 0)
+
+	if err != nil {
+		fmt.Println("转换bmp资源错误，Error：", err)
+	}
+
+	return optimizedSurface
+}
+
+// 刷新窗口
+func updateWindow(s *sdl.Surface) {
+	src := sdl.Rect{X: 0, Y: 0, W: s.W, H: s.H}
+	dst := sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}
+	// 填充刷新
+	// 缩放处理
+	if s.W < gScreenSurface.W {
+		s.BlitScaled(&src, gScreenSurface, &dst)
+	} else {
+		s.Blit(&src, gScreenSurface, &dst)
+	}
+	gWindow.UpdateSurface()
 }
 
 // 监听
@@ -103,13 +127,7 @@ func listen() {
 				default:
 					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_DEFAULT]
 				}
-
-				src := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
-				dst := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
-
-				// 填充刷新
-				gCurrentSurface.Blit(&src, gScreenSurface, &dst)
-				gWindow.UpdateSurface()
+				updateWindow(gCurrentSurface)
 			}
 		}
 
@@ -137,6 +155,9 @@ func main() {
 		fmt.Println("加载媒体失败！")
 		os.Exit(1)
 	}
+
+	gCurrentSurface = loadSurface("assets/05_stretch.bmp")
+	updateWindow(gCurrentSurface)
 
 	listen()
 
