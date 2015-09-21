@@ -11,6 +11,17 @@ import (
 
 var gWindow *sdl.Window
 var gScreenSurface *sdl.Surface
+var gKeyPressSurface [5]*sdl.Surface
+var gCurrentSurface *sdl.Surface
+
+const (
+	KEY_PRESS_SURFACE_DEFAULT = iota
+	KEY_PRESS_SURFACE_UP
+	KEY_PRESS_SURFACE_DOWN
+	KEY_PRESS_SURFACE_LEFT
+	KEY_PRESS_SURFACE_RIGHT
+	KEY_PRESS_SURFACE_TOTAL
+)
 
 // 设定窗口
 var screenWidth, screenHeight int = 640, 480
@@ -35,39 +46,33 @@ func sdlinit() (err error) {
 
 	gScreenSurface, _ = gWindow.GetSurface()
 	gScreenSurface.FillRect(&sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}, sdl.MapRGB(gScreenSurface.Format, 173, 22, 196))
+	gWindow.UpdateSurface()
+
 	return nil
 }
 
 // 加载媒体
-func loadMedia(i2 int) (err error) {
+func loadMedia() (err error) {
 
+	gKeyPressSurface[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("assets/press.bmp")
+	gKeyPressSurface[KEY_PRESS_SURFACE_DOWN] = loadSurface("assets/down.bmp")
+	gKeyPressSurface[KEY_PRESS_SURFACE_LEFT] = loadSurface("assets/left.bmp")
+	gKeyPressSurface[KEY_PRESS_SURFACE_RIGHT] = loadSurface("assets/right.bmp")
+	gKeyPressSurface[KEY_PRESS_SURFACE_UP] = loadSurface("assets/up.bmp")
+
+	return nil
+}
+
+func loadSurface(src string) *sdl.Surface {
 	var loadImg *sdl.Surface
-
-	switch i2 {
-	case 1:
-		loadImg, err = sdl.LoadBMP("assets/test.bmp")
-	case 2:
-		loadImg, err = sdl.LoadBMP("assets/test_close.bmp")
-	default:
-		loadImg, err = sdl.LoadBMP("assets/test.bmp")
-	}
+	loadImg, err := sdl.LoadBMP(src)
 
 	if err != nil {
 		fmt.Println("加载bmp资源错误，Error：", err)
-		return err
 	}
+	// defer loadImg.Free()
 
-	src := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
-	dst := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
-
-	// 刷新
-	loadImg.Blit(&src, gScreenSurface, &dst)
-
-	gWindow.UpdateSurface()
-
-	defer loadImg.Free()
-
-	return nil
+	return loadImg
 }
 
 // 监听
@@ -81,33 +86,43 @@ func listen() {
 			switch t := event.(type) {
 			case *sdl.QuitEvent:
 				// 结束事件
-				loadMedia(2)
-				sdl.Delay(2000)
 				running = false
-			case *sdl.MouseMotionEvent:
-				fmt.Printf("[%d ms] MouseMotion\ttype:%d\tid:%d\tx:%d\ty:%d\txrel:%d\tyrel:%d\n",
-					t.Timestamp, t.Type, t.Which, t.X, t.Y, t.XRel, t.YRel)
-			case *sdl.MouseButtonEvent:
-				fmt.Printf("[%d ms] MouseButton\ttype:%d\tid:%d\tx:%d\ty:%d\tbutton:%d\tstate:%d\n",
-					t.Timestamp, t.Type, t.Which, t.X, t.Y, t.Button, t.State)
-			case *sdl.MouseWheelEvent:
-				fmt.Printf("[%d ms] MouseWheel\ttype:%d\tid:%d\tx:%d\ty:%d\n",
-					t.Timestamp, t.Type, t.Which, t.X, t.Y)
-			case *sdl.KeyUpEvent:
+			case *sdl.KeyDownEvent:
 				fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
 					t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
 				// 键盘事件
 				switch t.Keysym.Sym {
-				case sdl.K_q:
-					running = false
+				case sdl.K_UP:
+					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_UP]
+				case sdl.K_DOWN:
+					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_DOWN]
+				case sdl.K_LEFT:
+					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_LEFT]
+				case sdl.K_RIGHT:
+					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_RIGHT]
+				default:
+					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_DEFAULT]
 				}
+
+				src := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
+				dst := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
+
+				// 填充刷新
+				gCurrentSurface.Blit(&src, gScreenSurface, &dst)
+				gWindow.UpdateSurface()
 			}
 		}
+
 	}
 }
 
 // 资源注销
 func close() {
+	// 资源释放
+	for _, s := range gKeyPressSurface {
+		s.Free()
+	}
+
 	gWindow.Destroy()
 	sdl.Quit()
 }
@@ -118,7 +133,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if loadMedia(1) != nil {
+	if loadMedia() != nil {
 		fmt.Println("加载媒体失败！")
 		os.Exit(1)
 	}
