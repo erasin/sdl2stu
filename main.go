@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/veandco/go-sdl2/sdl"
+	sdlImg "github.com/veandco/go-sdl2/sdl_image"
 )
 
 // 全局变量
@@ -44,6 +46,12 @@ func sdlinit() (err error) {
 	}
 	// defer window.Destroy()
 
+	// 检测是否支持PNG
+	if e := sdlImg.Init(sdlImg.INIT_PNG); e < 0 {
+		fmt.Println("图片加载器，吃书啊PNG失败! Error", e)
+		return err
+	}
+
 	gScreenSurface, _ = gWindow.GetSurface()
 	gScreenSurface.FillRect(&sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}, sdl.MapRGB(gScreenSurface.Format, 173, 22, 196))
 	gWindow.UpdateSurface()
@@ -66,12 +74,25 @@ func loadMedia() (err error) {
 // 加载贴图
 func loadSurface(src string) *sdl.Surface {
 	var loadedSurface, optimizedSurface *sdl.Surface
+	var err error
 
-	loadedSurface, err := sdl.LoadBMP(src)
+	regIsPng := regexp.MustCompile(".(png|PNG)$")
 
-	if err != nil {
-		fmt.Println("加载bmp资源错误，Error：", err)
+	// 判定资源
+	if regIsPng.MatchString(src) {
+		// PNG 图片资源加载
+		loadedSurface, err = sdlImg.Load(src)
+		if err != nil {
+			fmt.Println("加载PNG资源错误，Error：", err)
+		}
+	} else {
+		// BMP资源加载
+		loadedSurface, err = sdl.LoadBMP(src)
+		if err != nil {
+			fmt.Println("加载BMP资源错误，Error：", err)
+		}
 	}
+
 	// 释放旧数据
 	defer loadedSurface.Free()
 
@@ -79,7 +100,7 @@ func loadSurface(src string) *sdl.Surface {
 	optimizedSurface, err = loadedSurface.Convert(gScreenSurface.Format, 0)
 
 	if err != nil {
-		fmt.Println("转换bmp资源错误，Error：", err)
+		fmt.Println("转换图片资源错误，Error：", err)
 	}
 
 	return optimizedSurface
@@ -156,7 +177,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	gCurrentSurface = loadSurface("assets/05_stretch.bmp")
+	// 加载图片
+	gCurrentSurface = loadSurface("assets/06_loaded.png")
 	updateWindow(gCurrentSurface)
 
 	listen()
