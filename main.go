@@ -11,7 +11,6 @@ import (
 
 var gWindow *sdl.Window
 var gScreenSurface *sdl.Surface
-var gHelloWorld *sdl.Surface
 
 // 设定窗口
 var screenWidth, screenHeight int = 640, 480
@@ -40,20 +39,75 @@ func sdlinit() (err error) {
 }
 
 // 加载媒体
-func loadMedia() (err error) {
+func loadMedia(i2 int) (err error) {
 
-	gHelloWorld, err = sdl.LoadBMP("assets/test.bmp")
+	var loadImg *sdl.Surface
+
+	switch i2 {
+	case 1:
+		loadImg, err = sdl.LoadBMP("assets/test.bmp")
+	case 2:
+		loadImg, err = sdl.LoadBMP("assets/test_close.bmp")
+	default:
+		loadImg, err = sdl.LoadBMP("assets/test.bmp")
+	}
+
 	if err != nil {
 		fmt.Println("加载bmp资源错误，Error：", err)
 		return err
 	}
 
+	src := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
+	dst := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
+
+	// 刷新
+	loadImg.Blit(&src, gScreenSurface, &dst)
+
+	gWindow.UpdateSurface()
+
+	defer loadImg.Free()
+
 	return nil
+}
+
+// 监听
+func listen() {
+	var event sdl.Event
+	var running bool
+
+	running = true
+	for running {
+		for event = sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+			switch t := event.(type) {
+			case *sdl.QuitEvent:
+				// 结束事件
+				loadMedia(2)
+				sdl.Delay(2000)
+				running = false
+			case *sdl.MouseMotionEvent:
+				fmt.Printf("[%d ms] MouseMotion\ttype:%d\tid:%d\tx:%d\ty:%d\txrel:%d\tyrel:%d\n",
+					t.Timestamp, t.Type, t.Which, t.X, t.Y, t.XRel, t.YRel)
+			case *sdl.MouseButtonEvent:
+				fmt.Printf("[%d ms] MouseButton\ttype:%d\tid:%d\tx:%d\ty:%d\tbutton:%d\tstate:%d\n",
+					t.Timestamp, t.Type, t.Which, t.X, t.Y, t.Button, t.State)
+			case *sdl.MouseWheelEvent:
+				fmt.Printf("[%d ms] MouseWheel\ttype:%d\tid:%d\tx:%d\ty:%d\n",
+					t.Timestamp, t.Type, t.Which, t.X, t.Y)
+			case *sdl.KeyUpEvent:
+				fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
+					t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
+				// 键盘事件
+				switch t.Keysym.Sym {
+				case sdl.K_q:
+					running = false
+				}
+			}
+		}
+	}
 }
 
 // 资源注销
 func close() {
-	gHelloWorld.Free()
 	gWindow.Destroy()
 	sdl.Quit()
 }
@@ -64,19 +118,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	if loadMedia() != nil {
+	if loadMedia(1) != nil {
 		fmt.Println("加载媒体失败！")
 		os.Exit(1)
 	}
 
-	src := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
-	dst := sdl.Rect{X: 0, Y: 0, W: 640, H: 480}
+	listen()
 
-	// 刷新
-	gHelloWorld.Blit(&src, gScreenSurface, &dst)
-
-	gWindow.UpdateSurface()
-
-	sdl.Delay(5000)
+	// sdl.Delay(5000)
 	close()
 }
