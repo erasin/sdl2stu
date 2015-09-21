@@ -66,6 +66,8 @@ func sdlinit() (err error) {
 		return err
 	}
 
+	// gRender.SetDrawColor(10, 129, 54, 10)
+
 	// gScreenSurface, _ = gWindow.GetSurface()
 	// gScreenSurface.FillRect(&sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}, sdl.MapRGB(gScreenSurface.Format, 173, 22, 196))
 	// // gWindow.UpdateSurface()
@@ -129,6 +131,7 @@ func loadTexture(s *sdl.Surface) *sdl.Texture {
 	if err != nil {
 		fmt.Println("纹理渲染失败，Error:", err)
 	}
+	defer s.Free()
 	return newTexture
 }
 
@@ -202,7 +205,42 @@ func close() {
 	gTexture.Destroy()
 	gRender.Destroy()
 	gWindow.Destroy()
+
+	sdlImg.Quit()
 	sdl.Quit()
+}
+
+func drawGrid() {
+	gRender.SetDrawColor(255, 255, 255, 100)
+	gRender.Clear()
+	gRender.SetDrawColor(12, 172, 95, 100)
+	gRender.DrawLine(0, 0, 640, 480)
+	gRender.DrawLine(0, 480, 640, 0)
+
+	// 矩形
+	gRender.DrawRect(&sdl.Rect{
+		X: int32(screenWidth / 4),
+		Y: int32(screenWidth / 4),
+		W: int32(screenWidth / 2),
+		H: int32(screenHeight / 2),
+	})
+
+	gRender.SetDrawColor(137, 23, 209, 100)
+	// 实体矩形
+	gRender.FillRect(&sdl.Rect{
+		X: int32(screenWidth / 8),
+		Y: int32(screenWidth / 8),
+		W: int32(screenWidth / 4),
+		H: int32(screenHeight / 4),
+	})
+
+	gRender.SetDrawColor(0, 0, 0, 100)
+
+	for i := 0; i < screenHeight; i = i + 5 {
+		gRender.DrawPoint(i, i-5)
+	}
+
+	gRender.Present()
 }
 
 func main() {
@@ -217,20 +255,21 @@ func main() {
 	}
 
 	// 加载图片
-	gCurrentSurface = loadSurface("assets/06_loaded.png")
+	// gCurrentSurface = loadSurface("assets/06_loaded.png")
 	// updateWindow(gCurrentSurface)
-	updateRender(gCurrentSurface)
+	// updateRender(gCurrentSurface)
 
 	// 加载初始色彩
 	// var rmask uint32 = 54
 	// var gmask uint32 = 196
 	// var bmask uint32 = 36
-	// var amask uint32 = 100
+	// var amask uint32 = 1
 
 	// gScreenSurface, _ = sdl.CreateRGBSurface(0, int32(screenWidth), int32(screenHeight), 32, rmask, gmask, bmask, amask)
 	// updateRender(gScreenSurface)
 	// defer gScreenSurface.Free()
 
+	drawGrid()
 	listen()
 
 	// sdl.Delay(5000)
