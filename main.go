@@ -12,9 +12,16 @@ import (
 // 全局变量
 
 var gWindow *sdl.Window
+
 var gScreenSurface *sdl.Surface
 var gKeyPressSurface [5]*sdl.Surface
 var gCurrentSurface *sdl.Surface
+
+// 渲染器
+var gRender *sdl.Renderer
+
+// 纹理渲染
+var gTexture *sdl.Texture
 
 const (
 	KEY_PRESS_SURFACE_DEFAULT = iota
@@ -52,9 +59,16 @@ func sdlinit() (err error) {
 		return err
 	}
 
-	gScreenSurface, _ = gWindow.GetSurface()
-	gScreenSurface.FillRect(&sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}, sdl.MapRGB(gScreenSurface.Format, 173, 22, 196))
-	gWindow.UpdateSurface()
+	// 渲染器
+	gRender, err = sdl.CreateRenderer(gWindow, -1, sdl.RENDERER_PRESENTVSYNC)
+	if err != nil {
+		fmt.Println("无法创建渲染器 ", err)
+		return err
+	}
+
+	// gScreenSurface, _ = gWindow.GetSurface()
+	// gScreenSurface.FillRect(&sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}, sdl.MapRGB(gScreenSurface.Format, 173, 22, 196))
+	// // gWindow.UpdateSurface()
 
 	return nil
 }
@@ -73,7 +87,8 @@ func loadMedia() (err error) {
 
 // 加载贴图
 func loadSurface(src string) *sdl.Surface {
-	var loadedSurface, optimizedSurface *sdl.Surface
+	var loadedSurface *sdl.Surface
+	// var optimizedSurface *sdl.Surface
 	var err error
 
 	regIsPng := regexp.MustCompile(".(png|PNG)$")
@@ -94,16 +109,39 @@ func loadSurface(src string) *sdl.Surface {
 	}
 
 	// 释放旧数据
-	defer loadedSurface.Free()
+	// defer loadedSurface.Free()
 
 	// 转换
-	optimizedSurface, err = loadedSurface.Convert(gScreenSurface.Format, 0)
+	// optimizedSurface, err = loadedSurface.Convert(gScreenSurface.Format, 0)
+	//
+	// if err != nil {
+	// 	fmt.Println("转换图片资源错误，Error：", err)
+	// }
 
+	return loadedSurface
+}
+
+// 加载纹理
+func loadTexture(s *sdl.Surface) *sdl.Texture {
+	var newTexture *sdl.Texture
+	var err error
+	newTexture, err = gRender.CreateTextureFromSurface(s)
 	if err != nil {
-		fmt.Println("转换图片资源错误，Error：", err)
+		fmt.Println("纹理渲染失败，Error:", err)
 	}
+	return newTexture
+}
 
-	return optimizedSurface
+// 刷新渲染器
+func updateRender(s *sdl.Surface) {
+	gRender.Clear()
+
+	src := sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}
+	dst := sdl.Rect{X: 0, Y: 0, W: int32(screenWidth), H: int32(screenHeight)}
+
+	// 贴图
+	gRender.Copy(loadTexture(s), &src, &dst)
+	gRender.Present()
 }
 
 // 刷新窗口
@@ -148,7 +186,7 @@ func listen() {
 				default:
 					gCurrentSurface = gKeyPressSurface[KEY_PRESS_SURFACE_DEFAULT]
 				}
-				updateWindow(gCurrentSurface)
+				updateRender(gCurrentSurface)
 			}
 		}
 
@@ -161,7 +199,8 @@ func close() {
 	for _, s := range gKeyPressSurface {
 		s.Free()
 	}
-
+	gTexture.Destroy()
+	gRender.Destroy()
 	gWindow.Destroy()
 	sdl.Quit()
 }
@@ -179,7 +218,18 @@ func main() {
 
 	// 加载图片
 	gCurrentSurface = loadSurface("assets/06_loaded.png")
-	updateWindow(gCurrentSurface)
+	// updateWindow(gCurrentSurface)
+	updateRender(gCurrentSurface)
+
+	// 加载初始色彩
+	// var rmask uint32 = 54
+	// var gmask uint32 = 196
+	// var bmask uint32 = 36
+	// var amask uint32 = 100
+
+	// gScreenSurface, _ = sdl.CreateRGBSurface(0, int32(screenWidth), int32(screenHeight), 32, rmask, gmask, bmask, amask)
+	// updateRender(gScreenSurface)
+	// defer gScreenSurface.Free()
 
 	listen()
 
