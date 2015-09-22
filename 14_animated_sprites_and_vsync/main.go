@@ -136,10 +136,14 @@ func loadMedia() (err error) {
 		return
 	}
 
-	gSpriteClips[0] = sdl.Rect{X: 0, Y: 0, W: 64, H: 205}
-	gSpriteClips[1] = sdl.Rect{X: 64, Y: 0, W: 64, H: 205}
-	gSpriteClips[2] = sdl.Rect{X: 128, Y: 0, W: 64, H: 205}
-	gSpriteClips[3] = sdl.Rect{X: 196, Y: 0, W: 64, H: 205}
+	for i := 0; i < wALKING_ANIMATION_FRAMES; i++ {
+		x := i << 2
+		gSpriteClips[i] = sdl.Rect{X: int32(x), Y: 0, W: 64, H: 205}
+	}
+	//
+	// gSpriteClips[1] = sdl.Rect{X: 64, Y: 0, W: 64, H: 205}
+	// gSpriteClips[2] = sdl.Rect{X: 128, Y: 0, W: 64, H: 205}
+	// gSpriteClips[3] = sdl.Rect{X: 196, Y: 0, W: 64, H: 205}
 
 	return nil
 }
