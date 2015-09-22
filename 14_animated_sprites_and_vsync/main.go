@@ -137,13 +137,9 @@ func loadMedia() (err error) {
 	}
 
 	for i := 0; i < wALKING_ANIMATION_FRAMES; i++ {
-		x := i << 2
+		x := i << 6
 		gSpriteClips[i] = sdl.Rect{X: int32(x), Y: 0, W: 64, H: 205}
 	}
-	//
-	// gSpriteClips[1] = sdl.Rect{X: 64, Y: 0, W: 64, H: 205}
-	// gSpriteClips[2] = sdl.Rect{X: 128, Y: 0, W: 64, H: 205}
-	// gSpriteClips[3] = sdl.Rect{X: 196, Y: 0, W: 64, H: 205}
 
 	return nil
 }
@@ -193,7 +189,10 @@ func updateRender(frame int) {
 	gRender.Clear()
 
 	currentClip := gSpriteClips[frame/4]
-	gSpriteSheetTexture.Render((screenWidth-currentClip.W)/2, (screenHeight-currentClip.H)/2, &currentClip)
+	x := (screenWidth - currentClip.W) / 2
+	y := (screenHeight - currentClip.H) / 2
+	fmt.Println(frame, x, y)
+	gSpriteSheetTexture.Render(x, y, &currentClip)
 
 	// 更新渲染器
 	gRender.Present()
