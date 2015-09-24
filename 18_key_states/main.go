@@ -240,23 +240,43 @@ func listen() {
 				running = false
 			case *sdl.KeyDownEvent:
 				fmt.Printf("key:%v,state:%v\n", t.Keysym.Sym, t.State)
-				switch t.Keysym.Sym {
-				case sdl.K_UP:
-					currentTexture = &gUpTexture
-					break
-				case sdl.K_DOWN:
-					currentTexture = &gDownTexture
-					break
-				case sdl.K_LEFT:
-					currentTexture = &gLeftTexture
-					break
-				case sdl.K_RIGHT:
-					currentTexture = &gRightTexture
-					break
-				default:
-					currentTexture = &gPressTexture
-				}
+				// 	switch t.Keysym.Sym {
+				// 	case sdl.K_UP:
+				// 		currentTexture = &gUpTexture
+				// 		break
+				// 	case sdl.K_DOWN:
+				// 		currentTexture = &gDownTexture
+				// 		break
+				// 	case sdl.K_LEFT:
+				// 		currentTexture = &gLeftTexture
+				// 		break
+				// 	case sdl.K_RIGHT:
+				// 		currentTexture = &gRightTexture
+				// 		break
+				// 	default:
+				// 		currentTexture = &gPressTexture
+				// 	}
 			}
+		}
+
+		currentKeyStates := sdl.GetKeyboardState()
+		fmt.Println(currentKeyStates[sdl.SCANCODE_UP])
+
+		switch {
+		case currentKeyStates[sdl.SCANCODE_UP] == 1:
+			currentTexture = &gUpTexture
+			break
+		case currentKeyStates[sdl.SCANCODE_DOWN] == 1:
+			currentTexture = &gDownTexture
+			break
+		case currentKeyStates[sdl.SCANCODE_LEFT] == 1:
+			currentTexture = &gLeftTexture
+			break
+		case currentKeyStates[sdl.SCANCODE_RIGHT] == 1:
+			currentTexture = &gRightTexture
+			break
+		default:
+			currentTexture = &gPressTexture
 		}
 
 		updateRender()
@@ -266,6 +286,7 @@ func listen() {
 
 // 更新处理
 func updateRender() {
+
 	// 清空屏幕
 	gRenderer.SetDrawColor(0xFF, 0xFF, 0xFF, 0xFF)
 	gRenderer.Clear()
