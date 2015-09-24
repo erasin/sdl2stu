@@ -233,12 +233,16 @@ func listen() {
 
 	running = true
 	for running {
+		// 轮询未完成的事件
 		for event = sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch t := event.(type) {
 			case *sdl.QuitEvent:
 				// 结束事件
+				fmt.Println("结束")
 				running = false
+				goto L
 			case *sdl.KeyDownEvent:
+				// 按键后的触发
 				fmt.Printf("key:%v,state:%v\n", t.Keysym.Sym, t.State)
 				// 	switch t.Keysym.Sym {
 				// 	case sdl.K_UP:
@@ -259,6 +263,7 @@ func listen() {
 			}
 		}
 
+		// 检查监控到按键的状态
 		currentKeyStates := sdl.GetKeyboardState()
 		fmt.Println(currentKeyStates[sdl.SCANCODE_UP])
 
@@ -282,6 +287,8 @@ func listen() {
 		updateRender()
 
 	}
+L:
+	fmt.Println("结束。。。")
 }
 
 // 更新处理
