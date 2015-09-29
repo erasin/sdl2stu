@@ -24,7 +24,7 @@ type Dot struct {
 	mVelX, mVelY int
 
 	// 碰撞矩形
-	mCollider sdl.Rect
+	mCollider *sdl.Rect
 }
 
 func newDot() Dot {
@@ -38,7 +38,7 @@ func newDot() Dot {
 		mVelX: 0,
 		mVelY: 0,
 
-		mCollider: sdl.Rect{X: 0, Y: 0, W: int32(DOT_WIDTH), H: int32(DOT_HEIGHT)},
+		mCollider: &sdl.Rect{X: 0, Y: 0, W: int32(DOT_WIDTH), H: int32(DOT_HEIGHT)},
 	}
 }
 
@@ -115,7 +115,7 @@ func (dot *Dot) render() {
 
 // 碰撞探测
 //Box collision detector
-func checkCollision(a sdl.Rect, b *sdl.Rect) (ok bool) {
+func checkCollision(a *sdl.Rect, b *sdl.Rect) (ok bool) {
 	// 设定矩形边
 	var leftA, leftB, rightA, rightB, topA, topB, bottomA, bottomB int32
 

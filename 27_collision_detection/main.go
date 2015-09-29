@@ -171,10 +171,13 @@ func updateRender(avgFPS float32, dot *Dot) {
 
 	// 清空屏幕
 	gRenderer.SetDrawColor(0xFF, 0xFF, 0xFF, 0xFF)
-	gRenderer.Clear()
+	var err error = gRenderer.Clear()
+	if err != nil {
+		fmt.Println("clear err:", err)
+	}
 
 	timeText := fmt.Sprintf("FPS: %.2f", avgFPS)
-	err := gFPSTextTexture.LoadFromText(timeText, textColor)
+	err = gFPSTextTexture.LoadFromText(timeText, textColor)
 	if err != nil {
 		fmt.Println("时间文字无法加载！Error：", err)
 	}
